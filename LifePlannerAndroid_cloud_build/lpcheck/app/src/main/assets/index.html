@@ -4,6 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Мой Life Planner · Mint Chocolate</title>
+
+/* Исправление прокрутки нижнего меню на телефоне */
+@media (max-width: 800px) {
+  .mobile-nav {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    gap: 8px;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+
+  .mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-nav button {
+    flex: 0 0 auto;
+    min-width: 58px;
+  }
+}
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 :root{--bg:#f9e7c7;--green:#684f48;--sage:#8caeb2;--lilac:#d6e9ed;--lime:#ccd6d6;--ink:#453630;--muted:#88766e;--white:#fff;--shadow:0 8px 28px #684f4818;--radius:28px}
