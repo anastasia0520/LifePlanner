@@ -258,4 +258,5 @@ $('foodNote').addEventListener('change',()=>{data.foodNote=$('foodNote').value;s
 $('dreamName').addEventListener('change',updateDream);$('dreamTarget').addEventListener('change',updateDream);
 render();updateTimer();fillThemeControls();applyTheme(data.customTheme);applyUploadedImages();$('backgroundUpload').addEventListener('change',e=>uploadBackground(e.target.files[0]));$('decorationUpload').addEventListener('change',e=>uploadDecoration(e.target.files[0]));
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body></html>
