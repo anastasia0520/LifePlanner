@@ -30,6 +30,7 @@ jobs:
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Build APK
+        working-directory: LifePlannerAndroid_cloud_build/lpcheck
         run: gradle --no-daemon assembleDebug
 
       - name: Upload APK
