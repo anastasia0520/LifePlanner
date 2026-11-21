@@ -259,4 +259,14 @@ $('dreamName').addEventListener('change',updateDream);$('dreamTarget').addEventL
 render();updateTimer();fillThemeControls();applyTheme(data.customTheme);applyUploadedImages();$('backgroundUpload').addEventListener('change',e=>uploadBackground(e.target.files[0]));$('decorationUpload').addEventListener('change',e=>uploadDecoration(e.target.files[0]));
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://lqiqvnohxohacwkodgsu.supabase.co';
+
+const SUPABASE_KEY = 'sb_publishable_Yo16_x1NMzgdKwzBtbUoQg_fkX98ON-';
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+</script>
 </body></html>
