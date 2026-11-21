@@ -96,7 +96,7 @@ body.custom-bg{background-size:cover;background-position:center;background-attac
 
 
 <section class="tab" id="tab-customize"><div class="hero"><div class="eyebrow">ТВОЁ ПРОСТРАНСТВО · НАСТРОЙ ПОД СЕБЯ</div><h1>Оформление кабинета</h1><p>Меняй цвета и добавляй собственные изображения. Настройки сохраняются в этом браузере.</p></div><div class="grid">
- <div class="card span-6"><div class="section-head"><h2>Цветовая палитра</h2><span class="pill">Тема</span></div><div class="color-settings">
+ <div class="card span-12"><div class="section-head"><div><div class="eyebrow">ТВОИ ДАННЫЕ ПОД КОНТРОЛЕМ</div><h2>Резервная копия и перенос</h2></div><span class="pill">Без облака</span></div><p class="muted">Данные хранятся на этом устройстве. Создай файл резервной копии, чтобы перенести записи и оформление на другой телефон.</p><div class="row" style="flex-wrap:wrap"><button class="btn" type="button" onclick="exportBackup()">↓ Сохранить резервную копию</button><button class="btn light" type="button" onclick="document.getElementById('backupImportFile').click()">↑ Восстановить из файла</button><input id="backupImportFile" type="file" accept=".json,application/json" hidden></div><p class="tiny" id="backupStatus" role="status" aria-live="polite" style="margin-top:10px">Рекомендуем регулярно сохранять копию в отдельное место.</p><div class="notice" style="margin-top:10px">При восстановлении текущие данные на устройстве будут заменены содержимым выбранной копии. Перед импортом лучше сначала сохранить новую резервную копию.</div></div><div class="card span-6"><div class="section-head"><h2>Цветовая палитра</h2><span class="pill">Тема</span></div><div class="color-settings">
  <label>Фон страницы<input class="field color-field" type="color" id="themeBg" value="#e9eee9"></label>
  <label>Основной цвет кнопок<input class="field color-field" type="color" id="themeAccent" value="#315d58"></label>
  <label>Дополнительный акцент<input class="field color-field" type="color" id="themeSoft" value="#b8cbd0"></label>
@@ -251,6 +251,56 @@ function applyUploadedImages(){if(data.backgroundImage){document.body.style.back
 function removeBackgroundImage(){data.backgroundImage='';save();applyUploadedImages();$('backgroundUpload').value=''}
 function removeDecorationImage(){data.decorationImage='';save();applyUploadedImages();$('decorationUpload').value=''}
 
+
+// Local backup: export/import the complete Life Planner data object.
+const BACKUP_STORAGE_KEY='mylife_planner_v1';
+function setBackupStatus(message,isError=false){const el=$('backupStatus');if(el){el.textContent=message;el.style.color=isError?'#a33':'var(--muted)'}}
+function exportBackup(){
+  try{
+    const raw=localStorage.getItem(BACKUP_STORAGE_KEY);
+    if(!raw){setBackupStatus('Пока нет сохранённых данных для копирования.',true);return}
+    const parsed=JSON.parse(raw);
+    const payload={app:'Life Planner',formatVersion:1,exportedAt:new Date().toISOString(),data:parsed};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='LifePlanner-backup-'+today()+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setBackupStatus('Резервная копия подготовлена. Сохрани файл в надёжном месте.');
+  }catch(e){setBackupStatus('Не удалось создать копию: '+e.message,true)}
+}
+function handleImportedBackupText(text){
+  try{
+    const parsed=JSON.parse(text);
+    const restored=parsed&&parsed.app==='Life Planner'&&parsed.data&&typeof parsed.data==='object'?parsed.data:parsed;
+    if(!restored||Array.isArray(restored)||typeof restored!=='object'||!Array.isArray(restored.habits)||!Array.isArray(restored.commissions)){
+      throw new Error('Файл не похож на резервную копию Life Planner.');
+    }
+    if(!confirm('Заменить данные на этом устройстве данными из резервной копии?'))return false;
+    localStorage.setItem(BACKUP_STORAGE_KEY,JSON.stringify(restored));
+    data=JSON.parse(JSON.stringify(defaults));
+    data={...data,...restored};
+    if(!Array.isArray(data.purchases))data.purchases=[];
+    if(!data.dream||typeof data.dream!=='object')data.dream={name:'',target:0,cells:[]};
+    if(!Array.isArray(data.dream.cells))data.dream.cells=[];
+    save();
+    render();fillThemeControls();applyTheme(data.customTheme);applyUploadedImages();
+    setBackupStatus('Данные восстановлены. Проверь разделы приложения.');
+    return true;
+  }catch(e){setBackupStatus('Не удалось восстановить копию: '+e.message,true);return false}
+}
+function importBackupFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>handleImportedBackupText(String(reader.result||''));
+  reader.onerror=()=>setBackupStatus('Не удалось прочитать выбранный файл.',true);
+  reader.readAsText(file,'UTF-8');
+}
+$('backupImportFile').addEventListener('change',e=>{importBackupFile(e.target.files[0]);e.target.value=''});
+if(window.AndroidBackup){
+  window.AndroidBackup.onBackupExportReady=function(){setBackupStatus('Выбери место и имя файла для сохранения копии.')};
+}
+
 function render(){dateText();renderHome();renderWeek();renderHabits();renderWords();renderNotes();renderHealth();renderGoals();renderRewards();renderCreative();renderAdventure();renderFinance();$('energy').value=data.energy||'';$('mood').value=data.mood||'';$('mainThing').value=data.mainThing||'';$('dayWin').value=data.dayWin||'';$('dayMove').value=data.dayMove||''}
 buildNav();document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab==='home'));
 ['energy','mood','mainThing'].forEach(k=>$(k).addEventListener('change',()=>{data[k]=$(k).value;save()}));
@@ -258,30 +308,5 @@ $('dayWin').addEventListener('change',()=>{data.dayWin=$('dayWin').value;save()}
 $('foodNote').addEventListener('change',()=>{data.foodNote=$('foodNote').value;save()});
 $('dreamName').addEventListener('change',updateDream);$('dreamTarget').addEventListener('change',updateDream);
 render();updateTimer();fillThemeControls();applyTheme(data.customTheme);applyUploadedImages();$('backgroundUpload').addEventListener('change',e=>uploadBackground(e.target.files[0]));$('decorationUpload').addEventListener('change',e=>uploadDecoration(e.target.files[0]));
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = 'https://lqiqvnohxohacwkodgsu.supabase.co';
-
-const SUPABASE_KEY = 'sb_publishable_Yo16_x1NMzgdKwzBtbUoQg_fkX98ON-';
-
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
-</script>
-<script>
-(async function() {
-    const { data, error } = await supabaseClient
-        .from('planner_data')
-        .select('user_id')
-        .limit(1);
-
-    if (error) {
-        console.error('Supabase connection error:', error.message);
-    } else {
-        console.log('Supabase connection successful!');
-    }
-})();
 </script>
 </body></html>
