@@ -37,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: LifePlanner-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: LifePlannerAndroid_cloud_build/lpcheck/app/build/outputs/apk/debug/app-debug.apk
